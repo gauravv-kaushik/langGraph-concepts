@@ -1,5 +1,6 @@
 import streamlit as st
-from chatbot_backend import chatbot
+# from chatbot_backend import chatbot
+from database_chatbot_backend import chatbot, retrieve_all_threads
 from langchain.messages import HumanMessage
 import uuid
 
@@ -29,7 +30,7 @@ if 'thread_id' not in st.session_state:
     st.session_state['thread_id'] = generate_thread_id()
 
 if 'chat_threads' not in st.session_state:
-    st.session_state['chat_threads'] = []
+    st.session_state['chat_threads'] = retrieve_all_threads()
 
 # Ensure thread is stored once
 add_thread(st.session_state['thread_id'])
