@@ -1,8 +1,10 @@
 import streamlit as st
 # from chatbot_backend import chatbot
-from database_chatbot_backend import chatbot, retrieve_all_threads
-from langchain.messages import HumanMessage
+# from chatbot2_database_backend import chatbot, retrieve_all_threads
+from chatbot3_tools_backend import chatbot, retrieve_all_threads
+from langchain.messages import HumanMessage, AIMessage
 import uuid
+
 
 # ---------- Utility Functions ----------
 def generate_thread_id():
@@ -36,7 +38,11 @@ if 'chat_threads' not in st.session_state:
 add_thread(st.session_state['thread_id'])
 
 # CONFIG per thread
-CONFIG = {'configurable': {'thread_id': st.session_state['thread_id']}}
+CONFIG = {
+    'configurable': {'thread_id': st.session_state['thread_id']},
+    'metadata': {'thread_id': st.session_state['thread_id']},
+    'run_name':'chat_turn'
+    }
 
 # ---------- Sidebar ----------
 st.sidebar.title("LangGraph Chatbot")
@@ -80,19 +86,21 @@ if user_input:
 
     # Stream AI response
     with st.chat_message('assistant'):
-        stream_generator = (
-            chunk.content
+        def ai_only_stream():
             for chunk, metadata in chatbot.stream(
-                {'messages': [HumanMessage(content=user_input)]},
+                    {'messages': [HumanMessage(content=user_input)]},
                 config=CONFIG,
                 stream_mode='messages'
-            )
-        )
+            ):
+                if isinstance(chunk, AIMessage):
+                    yield chunk.content
 
-        ai_reply = st.write_stream(stream_generator)
+        ai_reply = st.write_stream(ai_only_stream())
 
     # Save AI message
     st.session_state['message_history'].append({
         'role': 'assistant',
         'content': ai_reply
     })
+
+# streamlit run chatbot_streamlit_frontend.py
